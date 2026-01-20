@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(.specify/scripts/powershell/setup-plan.ps1 -Json)",
+      "Bash(.specify/scripts/powershell/check-prerequisites.ps1 -Json)",
+      "Bash(.specify/scripts/powershell/check-prerequisites.ps1 -Json -RequireTasks -IncludeTasks)",
+      "Bash(npm init -y)",
+      "Bash(npm install next react react-dom typescript @types/react @types/node @types/react-dom --save)",
+      "Bash(npm install -D tailwindcss postcss autoprefixer)",
+      "Bash(npm cache clean --force)",
+      "Bash(npx tailwindcss init -p)",
+      "Bash(npm install -g npx)",
+      "Bash(./node_modules/.bin/tailwindcss init -p)",
+      "Bash(npm install tailwindcss --save-dev)",
+      "Bash(npm install tailwindcss postcss autoprefixer --save-dev)",
+      "Bash(npm install better-auth jest @testing-library/react --save)",
+      "Bash(git fetch --all --prune)",
+      "Bash(.specify/scripts/powershell/create-new-feature.ps1 -Json \"sp.specify \"\"Define and generate a complete Backend API for a Todo Application that integrates seamlessly with an existing Next.js frontend\"\" --json --number 1 --short-name \"\"todo-backend\"\"\")",
+      "Bash(.specify/scripts/bash/create-new-feature.sh --help)",
+      "Bash(git checkout -b 1-todo-backend)",
+      "Bash(.specify/scripts/bash/setup-plan.sh --help)",
+      "Bash(.specify/scripts/powershell/create-new-feature.ps1 -Json \"You are Claude Code working inside a Spec-Kit–managed monorepo for Hackathon II.\n\nThis project is in Phase II: Todo Full-Stack Web Application.\n\nYou MUST strictly follow spec-driven development for the backend \\(/backend\\).\nNever implement features without reading and referencing the relevant backend specs.\n\n--------------------------------------------------\nBACKEND SPECIFICATION TASK\n--------------------------------------------------\n\nGoal:\nDefine all backend specifications for Phase II Todo Full-Stack Web Application, following spec-driven development. This will serve as the authoritative source for backend implementation.\n\nScope:\n1. API Endpoints: @specs/api/rest-endpoints.md\n2. Database Schema: @specs/database/schema.md\n3. Authentication Rules: JWT + Better Auth\n4. User data isolation: Each endpoint must enforce user ownership\n5. Error handling: Use HTTPException with correct status codes\n6. Request/Response Schemas: Use Pydantic models\n\nRequirements:\n- List each API endpoint with method, path, authentica\" -Json -Number 1 -ShortName \"todo-backend-spec\" \"Backend specification for Todo Full-Stack Web Application\")",
+      "Skill(sp.specify)",
+      "Skill(sp.tasks)",
+      "Bash(powershell -Command \".specify/scripts/powershell/check-prerequisites.ps1 -Json\")",
+      "Bash(dir \"C:\\\\Users\\\\amber\\\\Desktop\\\\hackathon2\\\\specs\\\\1-todo-backend\" /s /b *.md)",
+      "Bash(powershell -Command \".specify/scripts/powershell/check-prerequisites.ps1 -Json -RequireTasks -IncludeTasks\")",
+      "Bash(git rev-parse --git-dir)",
+      "Bash(python -m pytest test_main.py -v)",
+      "Bash(pip install -r requirements.txt)",
+      "Bash(python verify_implementation.py)",
+      "Bash(python backend/verify_implementation.py)"
+    ]
+  }
+}

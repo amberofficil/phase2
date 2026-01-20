@@ -1,55 +1,48 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+Sync Impact Report:
+- Version change: N/A → 1.0.0
+- Modified principles: N/A (new constitution)
+- Added sections: All principles and sections
+- Removed sections: N/A
+- Templates requiring updates: N/A
+- Follow-up TODOs: None
+-->
+# Hackathon II Todo Full-Stack Web Application Constitution
+
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### Spec-Driven Development
+Always read specs before coding. Feature behavior follows @specs/features/, API contracts follow @specs/api/, Database schema follows @specs/database/, UI behavior follows @specs/ui/, Architecture follows @specs/overview.md. If requirements are unclear or missing, stop and ask to update or clarify the spec first. Do not guess or invent behavior. Specs are the source of truth.
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+### Monorepo Architecture Compliance
+Follow the monorepo structure with /frontend → Next.js 16+ App Router (TypeScript, Tailwind CSS), /backend → Python FastAPI (SQLModel, Neon PostgreSQL), /specs → All specifications, /.spec-kit → Spec-Kit configuration. All code must align with this architecture.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### Authentication Enforcement (NON-NEGOTIABLE)
+All routes must require JWT authentication. JWT must be validated using BETTER_AUTH_SECRET. User identity must be extracted from JWT, not from request body. Every query MUST be filtered by authenticated user ID. Never return data belonging to another user.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### Frontend Best Practices
+Use Next.js 16+ with App Router. Use Server Components by default. Use Client Components only when interactivity is required. No React Router (Next.js routing only). API calls MUST go through `/lib/api.ts`. Authentication handled ONLY by Better Auth. JWT token must be attached to every backend API request.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### Backend Standards
+Framework: FastAPI, ORM: SQLModel, Database: Neon Serverless PostgreSQL. All routes must be under `/api`. Use Pydantic models for request/response schemas. Handle errors using HTTPException with proper status codes. Database schema must match @specs/database/schema.md.
 
-### [PRINCIPLE_6_NAME]
+### API Contract Adherence
+API endpoints must match @specs/api/rest-endpoints.md exactly. HTTP methods, paths, and behavior must not change. Endpoints must be stateless. No session-based authentication. All CRUD operations are user-scoped.
 
 
-[PRINCIPLE__DESCRIPTION]
+## Security Requirements
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+Better Auth runs ONLY on the Next.js frontend. Better Auth must issue JWT tokens. Frontend sends JWT in: Authorization: Bearer <token>. Backend verifies JWT signature and expiration. Backend must reject unauthenticated requests with 401. Backend must enforce task ownership on every operation.
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+## Implementation Workflow
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+When asked to implement something: 1. Read the relevant spec(s), 2. Confirm understanding of acceptance criteria, 3. Implement backend first (API + DB), 4. Implement frontend integration, 5. Ensure JWT auth is enforced end-to-end, 6. Do not add extra features beyond the spec.
+
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+Constitution supersedes all other practices. All implementations must verify compliance with spec-driven development. Code must match specs exactly. If code and spec conflict, update the spec before changing code. All PRs/reviews must verify compliance.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.0.0 | **Ratified**: 2026-01-17 | **Last Amended**: 2026-01-17
