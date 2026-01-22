@@ -2,9 +2,10 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { signIn, signUp, signOut, getCurrentUser } from '../lib/auth';
 
 interface User {
-  id: number;
+  id: string;
   email: string;
 }
 
@@ -19,96 +20,78 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL + "/api";
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      setIsLoading(false);
-      return;
-    }
+    // Initialize auth state from stored token
+    const initializeAuth = async () => {
+      try {
+        const userData = await getCurrentUser();
+        if (userData) {
+          setUser(userData);
+        }
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+        // Clear invalid token if present
+        localStorage.removeItem('token');
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-    fetch(`${API_URL}/auth/me`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then(res => res.ok ? res.json() : null)
-      .then(data => {
-        if (data) setUser(data);
-      })
-      .finally(() => setIsLoading(false));
+    initializeAuth();
   }, []);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
 
-    const res = await fetch(`${API_URL}/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
-
-    if (!res.ok) {
-      setIsLoading(false);
+    try {
+      const result = await signIn(email, password);
+      if (result) {
+        localStorage.setItem("token", result.access_token);
+        setUser(result.user);
+        return true;
+      }
       return false;
+    } catch (error) {
+      console.error('Login error:', error);
+      return false;
+    } finally {
+      setIsLoading(false);
     }
-
-    const data = await res.json();
-    localStorage.setItem("token", data.access_token);
-    setUser(data.user);
-    setIsLoading(false);
-    return true;
   };
 
   const register = async (email: string, password: string): Promise<boolean> => {
-  setIsLoading(true);
+    setIsLoading(true);
 
-  try {
-    // 1️⃣ Register user
-    const res = await fetch(`${API_URL}/auth/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    });
+    try {
+      const result = await signUp(email, password);
+      if (result) {
+        localStorage.setItem('token', result.access_token);
+        setUser(result.user);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Registration error:', error);
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    if (!res.ok) return false;
-
-    // 2️⃣ Auto login after signup
-    const loginRes = await fetch(`${API_URL}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    });
-
-    if (!loginRes.ok) return false;
-
-    const loginData = await loginRes.json();
-
-    localStorage.setItem('token', loginData.access_token);
-
-    setUser({
-      id: loginData.user.id.toString(),
-      email: loginData.user.email,
-    });
-
-    return true;
-  } catch (err) {
-    console.error(err);
-    return false;
-  } finally {
-    setIsLoading(false);
-  }
-};
-
-
-  const logout = () => {
-    localStorage.removeItem("token");
-    setUser(null);
+  const logout = async () => {
+    try {
+      await signOut();
+      setUser(null);
+    } catch (error) {
+      console.error('Logout error:', error);
+      // Still clear local state even if backend call fails
+      localStorage.removeItem('token');
+      setUser(null);
+    }
   };
 
   return (

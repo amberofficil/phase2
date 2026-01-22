@@ -1,64 +1,99 @@
-// Mock authentication functions - these will need to be replaced with actual Better Auth integration
+// Actual authentication functions that call the backend API
 
 interface User {
   id: string;
   email: string;
 }
 
-// Mock API calls - these should be replaced with actual API calls to backend
-const mockUsers: User[] = [];
-let mockCurrentUser: User | null = null;
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL + "/api";
 
-export async function signIn(email: string, password: string): Promise<User | null> {
-  // In a real implementation, this would call the backend authentication API
-  // For now, we'll simulate a successful login for any valid email/password combination
+export async function signIn(email: string, password: string): Promise<{ access_token: string; user: User } | null> {
+  try {
+    const res = await fetch(`${API_URL}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
 
-  // Find user in mock database
-  const user = mockUsers.find(u => u.email === email);
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({ detail: "Login failed" }));
+      throw new Error(errorData.detail || "Login failed");
+    }
 
-  if (user) {
-    mockCurrentUser = user;
-    return user;
+    const data = await res.json();
+    return data.data; // Return the response data which contains access_token and user
+  } catch (error) {
+    console.error("Login error:", error);
+    throw error;
   }
-
-  // If user doesn't exist, return null
-  return null;
 }
 
-export async function signUp(email: string, password: string): Promise<User | null> {
-  // In a real implementation, this would call the backend registration API
-  // For now, we'll simulate a successful registration
+export async function signUp(email: string, password: string): Promise<{ access_token: string; user: User } | null> {
+  try {
+    const res = await fetch(`${API_URL}/auth/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
 
-  // Check if user already exists
-  const existingUser = mockUsers.find(u => u.email === email);
-  if (existingUser) {
-    throw new Error('User already exists');
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({ detail: "Registration failed" }));
+      throw new Error(errorData.detail || "Registration failed");
+    }
+
+    const data = await res.json();
+    return data.data; // Return the response data which contains access_token and user
+  } catch (error) {
+    console.error("Registration error:", error);
+    throw error;
   }
-
-  // Create new user
-  const newUser: User = {
-    id: `user_${Date.now()}`,
-    email,
-  };
-
-  mockUsers.push(newUser);
-  mockCurrentUser = newUser;
-
-  return newUser;
 }
 
 export async function signOut(): Promise<void> {
-  // In a real implementation, this would call the backend logout API
-  mockCurrentUser = null;
+  // Clear the stored token
+  localStorage.removeItem("token");
 }
 
 export async function getCurrentUser(): Promise<User | null> {
-  // In a real implementation, this would validate the JWT token with the backend
-  return mockCurrentUser;
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      return null;
+    }
+
+    const res = await fetch(`${API_URL}/auth/me`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) {
+      if (res.status === 401) {
+        // Token is invalid, remove it
+        localStorage.removeItem("token");
+      }
+      return null;
+    }
+
+    const data = await res.json();
+    return data.data; // Return user data
+  } catch (error) {
+    console.error("Get current user error:", error);
+    return null;
+  }
 }
 
 // Function to attach auth headers to API requests
 export function getAuthHeaders(): Record<string, string> {
-  // In a real implementation, this would return the JWT token
-  return {};
+  const token = localStorage.getItem("token");
+  if (!token) {
+    return {};
+  }
+
+  return {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${token}`,
+  };
 }

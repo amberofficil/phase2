@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Import routers
-from routes import tasks
+from routes import tasks, auth
 
 app = FastAPI(
     title="Todo Application Backend API",
@@ -18,7 +18,11 @@ app = FastAPI(
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, replace with specific origins
+    allow_origins=[
+        "https://phase2-nine.vercel.app",  # Production Vercel domain
+        "http://localhost:3000",          # Local development
+        "http://localhost:3001",          # Alternative local port
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -26,6 +30,7 @@ app.add_middleware(
 
 # Include API routes
 app.include_router(tasks.router, prefix="/api")
+app.include_router(auth.router, prefix="/api")
 
 @app.get("/")
 def read_root():
