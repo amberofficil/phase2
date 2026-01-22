@@ -5,6 +5,7 @@ import { TaskList } from '../../components/common/TaskList';
 import { CreateTaskForm } from '../../components/common/CreateTaskForm';
 import { FilterControls } from '../../components/common/FilterControls';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
+import { useRouter } from 'next/navigation';
 
 interface Task {
   id: string;
@@ -15,6 +16,8 @@ interface Task {
   updatedAt: string;
 }
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL + '/api';
+
 export default function DashboardPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [filter, setFilter] = useState<'all' | 'pending' | 'completed'>('all');
@@ -22,38 +25,71 @@ export default function DashboardPage() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [isLoading, setIsLoading] = useState(true);
 
-  // ✅ Fetch tasks from backend
+  const router = useRouter();
+
+  // ----------------------------
+  // Fetch tasks with JWT token
+  // ----------------------------
   useEffect(() => {
     const fetchTasks = async () => {
       try {
         setIsLoading(true);
-        const res = await fetch('https://amberofficial-todo.hf.space/api/tasks');
-        if (!res.ok) throw new Error('Failed to fetch tasks');
-        const data: Task[] = await res.json();
-        setTasks(data);
+        const token = localStorage.getItem('token');
+
+        if (!token) {
+          console.warn('No token found, redirecting to login');
+          router.push('/login'); // redirect if not logged in
+          return;
+        }
+
+        const res = await fetch(`${API_BASE_URL}/tasks/`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!res.ok) {
+          if (res.status === 401) {
+            localStorage.removeItem('token');
+            router.push('/login'); // token invalid, redirect
+            return;
+          }
+          const err = await res.text();
+          throw new Error(err);
+        }
+
+
+        const data = await res.json();
+        setTasks(data.data.tasks || []); // ✅ data inside ApiResponse.data.tasks
       } catch (err) {
         console.error('Error fetching tasks:', err);
+        setTasks([]);
       } finally {
         setIsLoading(false);
       }
     };
-    fetchTasks();
-  }, []);
 
-  // ✅ Filter + Sort tasks using useMemo
+    fetchTasks();
+  }, [router]);
+
+  // ----------------------------
+  // Filter + Sort
+  // ----------------------------
   const filteredAndSortedTasks = useMemo(() => {
     let result = [...tasks];
 
-    // Filter
     if (filter === 'pending') result = result.filter(t => t.status === 'pending');
     if (filter === 'completed') result = result.filter(t => t.status === 'completed');
 
-    // Sort
     result.sort((a, b) => {
       let comparison = 0;
       if (sortBy === 'title') comparison = a.title.localeCompare(b.title);
-      else if (sortBy === 'date') comparison = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-      else if (sortBy === 'priority') comparison = a.status === 'completed' ? 1 : -1;
+      else if (sortBy === 'date')
+        comparison = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      else if (sortBy === 'priority')
+        comparison = a.status === 'completed' ? 1 : -1;
 
       return sortOrder === 'asc' ? comparison : -comparison;
     });
@@ -61,20 +97,25 @@ export default function DashboardPage() {
     return result;
   }, [tasks, filter, sortBy, sortOrder]);
 
-  // ✅ Handlers
-  const handleTaskCreated = (newTask: Task) => setTasks(prev => [newTask, ...prev]);
-  const handleTaskUpdated = (updatedTask: Task) =>
-    setTasks(prev => prev.map(task => task.id === updatedTask.id ? updatedTask : task));
-  const handleTaskDeleted = (deletedTaskId: string) =>
-    setTasks(prev => prev.filter(task => task.id !== deletedTaskId));
+  // ----------------------------
+  // Task handlers
+  // ----------------------------
+  const handleTaskCreated = (newTask: Task) =>
+    setTasks(prev => [newTask, ...prev]);
 
-  // ✅ Loading spinner
+  const handleTaskUpdated = (updatedTask: Task) =>
+    setTasks(prev => prev.map(t => (t.id === updatedTask.id ? updatedTask : t)));
+
+  const handleTaskDeleted = (id: string) =>
+    setTasks(prev => prev.filter(t => t.id !== id));
+
+  // ----------------------------
+  // Loading spinner
+  // ----------------------------
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="flex justify-center items-center h-64">
-          <LoadingSpinner />
-        </div>
+        <LoadingSpinner />
       </div>
     );
   }
@@ -84,9 +125,7 @@ export default function DashboardPage() {
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
           <h1 className="text-4xl font-bold text-blue-500">My Tasks</h1>
-          <div className="w-full md:w-auto">
-            <CreateTaskForm onTaskCreated={handleTaskCreated} />
-          </div>
+          <CreateTaskForm onTaskCreated={handleTaskCreated} />
         </div>
 
         <FilterControls
