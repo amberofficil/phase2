@@ -3,7 +3,7 @@ interface User {
   email: string;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+const API_URL = "http://localhost:7860/api/auth";
 
 // Sign in
 export async function signIn(email: string, password: string) {
