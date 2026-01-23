@@ -6,7 +6,7 @@ interface User {
   email: string;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL + "/api";
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 // Sign in user
 export async function signIn(email: string, password: string): Promise<{ access_token: string; user: User } | null> {
