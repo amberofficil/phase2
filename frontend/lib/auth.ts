@@ -56,3 +56,4 @@ export async function getCurrentUser(): Promise<User | null> {
   const data = await res.json();
   return data.data;
 }
+
