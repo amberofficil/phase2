@@ -5,7 +5,7 @@ interface User {
 
 const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-// LOGIN
+// Sign in
 export async function signIn(email: string, password: string) {
   const res = await fetch(`${API_URL}/api/auth/login`, {
     method: 'POST',
@@ -20,7 +20,7 @@ export async function signIn(email: string, password: string) {
   return data.data;
 }
 
-// REGISTER
+// Sign up
 export async function signUp(email: string, password: string) {
   const res = await fetch(`${API_URL}/api/auth/register`, {
     method: 'POST',
