@@ -1,8 +1,16 @@
-
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from 'react';
+
 import { signIn, signUp, signOut, getCurrentUser } from '../lib/auth';
+
+
 
 interface User {
   id: string;
@@ -24,74 +32,62 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // 🔹 App load par token se user nikalna
   useEffect(() => {
-    // Initialize auth state from stored token
-    const initializeAuth = async () => {
+    const initAuth = async () => {
       try {
         const userData = await getCurrentUser();
-        if (userData) {
-          setUser(userData);
-        }
-      } catch (error) {
-        console.error('Error initializing auth:', error);
-        // Clear invalid token if present
+        if (userData) setUser(userData);
+      } catch (err) {
         localStorage.removeItem('token');
       } finally {
         setIsLoading(false);
       }
     };
 
-    initializeAuth();
+    initAuth();
   }, []);
 
-  const login = async (email: string, password: string) => {
+  // ✅ LOGIN (FIXED)
+  const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
-
     try {
       const result = await signIn(email, password);
       if (result) {
-        localStorage.setItem("token", result.access_token);
-        setUser(result.user);
+        setUser(result.user); // ✅ token already auth.ts me save ho raha
         return true;
       }
       return false;
-    } catch (error) {
-      console.error('Login error:', error);
+    } catch (err) {
+      console.error('Login error:', err);
       return false;
     } finally {
       setIsLoading(false);
     }
   };
 
+  // ✅ REGISTER (FIXED)
   const register = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
-
     try {
       const result = await signUp(email, password);
       if (result) {
-        localStorage.setItem('token', result.access_token);
         setUser(result.user);
         return true;
       }
       return false;
-    } catch (error) {
-      console.error('Registration error:', error);
+    } catch (err) {
+      console.error('Register error:', err);
       return false;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const logout = async () => {
-    try {
-      await signOut();
-      setUser(null);
-    } catch (error) {
-      console.error('Logout error:', error);
-      // Still clear local state even if backend call fails
-      localStorage.removeItem('token');
-      setUser(null);
-    }
+  // ✅ LOGOUT
+  const logout = () => {
+    signOut();
+    setUser(null);
   };
 
   return (
@@ -112,6 +108,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used inside AuthProvider");
+  if (!ctx) throw new Error('useAuth must be used inside AuthProvider');
   return ctx;
 }
