@@ -1,94 +1,44 @@
-// frontend/apis/todos.ts
+const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL + "/api";
-
-// ✅ Get auth header from localStorage token
-const getAuthHeader = () => {
-  const token = localStorage.getItem("token");
-  if (!token) throw new Error("No auth token found");
-
+function authHeaders() {
   return {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${token}`,
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${localStorage.getItem('token')}`,
   };
-};
+}
 
-// ----------------------
-// Get all tasks
-// ----------------------
-export const fetchTasks = async () => {
-  const res = await fetch(`${API_URL}/tasks/`, {
-    method: "GET",
-    headers: getAuthHeader(),
+// GET TASKS
+export async function getTasks() {
+  const res = await fetch(`${API_URL}/api/tasks`, {
+    headers: authHeaders(),
   });
+  return res.json();
+}
 
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Failed to fetch tasks: ${err}`);
-  }
-
-  const json = await res.json();
-  return json.data.tasks; // ✅ tasks ApiResponse.data.tasks me hain
-};
-
-// ----------------------
-// Add task
-// ----------------------
-export const addTask = async (task: {
-  title: string;
-  description?: string;
-}) => {
-  const res = await fetch(`${API_URL}/tasks/`, {
-    method: "POST",
-    headers: getAuthHeader(),
+// ADD TASK
+export async function addTask(task: any) {
+  const res = await fetch(`${API_URL}/api/tasks`, {
+    method: 'POST',
+    headers: authHeaders(), // ✅ FIX
     body: JSON.stringify(task),
   });
+  return res.json();
+}
 
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Failed to add task: ${err}`);
-  }
-
-  const json = await res.json();
-  return json.data; // ✅ new task object
-};
-
-// ----------------------
-// Update task
-// ----------------------
-export const updateTask = async (
-  id: string,
-  task: { title?: string; description?: string; status?: string }
-) => {
-  const res = await fetch(`${API_URL}/tasks/${id}/`, {
-    method: "PUT",
-    headers: getAuthHeader(),
+// UPDATE TASK
+export async function updateTask(id: string, task: any) {
+  const res = await fetch(`${API_URL}/api/tasks/${id}`, {
+    method: 'PUT',
+    headers: authHeaders(), // ✅ FIX
     body: JSON.stringify(task),
   });
+  return res.json();
+}
 
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Failed to update task: ${err}`);
-  }
-
-  const json = await res.json();
-  return json.data; // ✅ updated task
-};
-
-// ----------------------
-// Delete task
-// ----------------------
-export const deleteTask = async (id: string) => {
-  const res = await fetch(`${API_URL}/tasks/${id}/`, {
-    method: "DELETE",
-    headers: getAuthHeader(),
+// DELETE TASK
+export async function deleteTask(id: string) {
+  await fetch(`${API_URL}/api/tasks/${id}`, {
+    method: 'DELETE',
+    headers: authHeaders(), // ✅ FIX
   });
-
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Failed to delete task: ${err}`);
-  }
-
-  const json = await res.json();
-  return json.data; // ✅ deleted task / success info
-};
+}
