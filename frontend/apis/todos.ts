@@ -1,44 +1,54 @@
+'use client'; // ✅ ensures this file runs on client only
+
 const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:7860";
 
+// Helper: Get auth headers safely
 function authHeaders() {
+  const token = localStorage.getItem('token'); // safe now
   return {
     'Content-Type': 'application/json',
-    Authorization: `Bearer ${localStorage.getItem('token')}`,
+    Authorization: token ? `Bearer ${token}` : '',
   };
 }
 
-// GET TASKS
+// ---------------- GET TASKS ----------------
 export async function getTasks() {
   const res = await fetch(`${API_URL}/api/tasks`, {
     headers: authHeaders(),
   });
+  if (!res.ok) throw new Error('Failed to fetch tasks');
   return res.json();
 }
 
-// ADD TASK
+// ---------------- ADD TASK ----------------
 export async function addTask(task: any) {
   const res = await fetch(`${API_URL}/api/tasks`, {
     method: 'POST',
-    headers: authHeaders(), // ✅ FIX
+    headers: authHeaders(),
     body: JSON.stringify(task),
   });
+  if (!res.ok) throw new Error('Failed to add task');
   return res.json();
 }
 
-// UPDATE TASK
+// ---------------- UPDATE TASK ----------------
 export async function updateTask(id: string, task: any) {
   const res = await fetch(`${API_URL}/api/tasks/${id}`, {
     method: 'PUT',
-    headers: authHeaders(), // ✅ FIX
+    headers: authHeaders(),
     body: JSON.stringify(task),
   });
+  if (!res.ok) throw new Error('Failed to update task');
   return res.json();
 }
 
-// DELETE TASK
+// ---------------- DELETE TASK ----------------
 export async function deleteTask(id: string) {
-  await fetch(`${API_URL}/api/tasks/${id}`, {
+  const res = await fetch(`${API_URL}/api/tasks/${id}`, {
     method: 'DELETE',
-    headers: authHeaders(), // ✅ FIX
+    headers: authHeaders(),
   });
+  if (!res.ok) throw new Error('Failed to delete task');
+  return res.json();
 }
+
