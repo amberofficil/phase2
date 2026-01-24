@@ -61,7 +61,7 @@ async def register_user(request: Request, session: Session = Depends(get_session
         db_user = User(
             id=uuid.uuid4(),
             email=user_data["email"],
-            hashed_password=hashed_password
+            password_hash=hashed_password
         )
 
         session.add(db_user)
@@ -108,7 +108,7 @@ async def login_user(request: Request, session: Session = Depends(get_session)):
         statement = select(User).where(User.email == login_data["email"])
         user = session.exec(statement).first()
 
-        if not user or not pwd_context.verify(login_data["password"], user.hashed_password):
+        if not user or not pwd_context.verify(login_data["password"], user.password_hash):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Incorrect email or password",
