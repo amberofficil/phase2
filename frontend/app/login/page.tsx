@@ -12,6 +12,8 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     const res = await signIn(email.trim(), password); // trim() for safety
+
+    console.log("Login response:", res);
     if (res?.token) {
       // ✅ Save token locally
       localStorage.setItem("access_token", res.token);
