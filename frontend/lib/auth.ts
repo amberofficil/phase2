@@ -1,4 +1,4 @@
-// auth.ts
+
 
 interface User {
   id: string;
@@ -91,9 +91,5 @@ export function getAuthHeaders(): { [key: string]: string } {
   if (typeof window === "undefined") return {};
 
   const token = localStorage.getItem("access_token");
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  return token ? { Authorization: `Bearer ${token}` } : {}
 }
-
-
-
-

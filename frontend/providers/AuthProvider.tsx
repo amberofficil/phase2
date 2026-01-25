@@ -29,15 +29,23 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  
+  const [user, setUser] = useState<any>(null);
+
   const [isLoading, setIsLoading] = useState(true);
 
   // 🔹 App load par token se user nikalna
   useEffect(() => {
     const initAuth = async () => {
       try {
-        const userData = await getCurrentUser();
-        if (userData) setUser(userData);
+        const tokenData = getCurrentUser();
+if (tokenData) {
+  setUser({
+    id: "temp",
+    email: "logged-in-user",
+  });
+}
+
       } catch (err) {
         localStorage.removeItem('token');
       } finally {
