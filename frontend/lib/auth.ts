@@ -1,60 +1,67 @@
+
+// auth.ts
 interface User {
   id: string;
   email: string;
 }
 
+// Sign in function
+export async function signIn(email: string, password: string): Promise<{ token: string; user: User } | null> {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
 
-const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:7860"; // Use env var or fallback to localhost
+    if (!res.ok) {
+      const errorText = await res.text();
+      throw new Error(errorText || 'Login failed');
+    }
 
-// Sign in
-export async function signIn(email: string, password: string) {
-  const res = await fetch(`${API_URL}/api/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
-  });
-
-  if (!res.ok) throw new Error('Login failed');
-
-  const data = await res.json();
-  localStorage.setItem('token', data.data.access_token);
-  return data.data;
+    const data = await res.json();
+    localStorage.setItem('access_token', data.token); // token store
+    return data;
+  } catch (err) {
+    console.error('SignIn Error:', err);
+    return null;
+  }
 }
 
-// Sign up
-export async function signUp(email: string, password: string) {
-  const res = await fetch(`${API_URL}/api/register`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
-  });
+// Sign up function
+export async function signUp(email: string, password: string): Promise<{ token: string; user: User } | null> {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
 
-  if (!res.ok) throw new Error('Register failed');
+    if (!res.ok) {
+      const errorText = await res.text();
+      throw new Error(errorText || 'Register failed');
+    }
 
-  const data = await res.json();
-  localStorage.setItem('token', data.data.access_token);
-  return data.data;
+    const data = await res.json();
+    localStorage.setItem('access_token', data.token); // token store
+    return data;
+  } catch (err) {
+    console.error('SignUp Error:', err);
+    return null;
+  }
 }
 
-// ✅ SIGN OUT (MUST EXIST)
-export function signOut() {
-  localStorage.removeItem('token');
+// Logout
+export function logout() {
+  localStorage.removeItem('access_token');
 }
 
-// CURRENT USER
-export async function getCurrentUser(): Promise<User | null> {
-  const token = localStorage.getItem('token');
-  if (!token) return null;
 
-  const res = await fetch(`${API_URL}/api/me`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  if (!res.ok) return null;
-
-  const data = await res.json();
-  return data.data;
+// auth.ts ke end me add 
+export function getAuthHeaders(): { [key: string]: string } {
+  const token = localStorage.getItem('access_token');
+  return token ? { Authorization: `Bearer ${token}` } : {};
 }
+
+
 

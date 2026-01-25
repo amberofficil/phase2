@@ -1,19 +1,5 @@
-//import './globals.css';
-//import ClientProviders from '@/providers/ClientProviders';
-
-//export default function RootLayout({
-  //children,
-//}: {
- // children: React.ReactNode;
-//}) {
- // return (
-   // <html lang="en">
-    //  <body>
-     //   <ClientProviders>{children}</ClientProviders>
-     // </body>
-   // </html>
-  //);
-//}
+import './globals.css';
+import ClientProviders from '@/providers/ClientProviders';
 
 export default function RootLayout({
   children,
@@ -22,10 +8,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <ClientProviders>{children}</ClientProviders>
+      </body>
     </html>
   );
 }
+
+
 
 
 
