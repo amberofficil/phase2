@@ -2,7 +2,7 @@
 
 const API_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ??
-  'https://amberofficial-todo.hf.space'; // ⚠️ MUST be same as auth backend
+  'https://amberofficial-todo.hf.space';
 
 function authHeaders() {
   const token =
@@ -16,9 +16,9 @@ function authHeaders() {
   };
 }
 
-// -------- GET MY TASKS --------
+// GET MY TASKS
 export async function getTasks() {
-  const res = await fetch(`${API_URL}/tasks/me`, {
+  const res = await fetch(`${API_URL}/tasks/`, {  // ✅ NOTE trailing slash
     method: 'GET',
     headers: authHeaders(),
   });
@@ -27,49 +27,44 @@ export async function getTasks() {
     throw new Error('Failed to fetch tasks');
   }
 
-  return res.json();
+  const data = await res.json();
+  return data.data.tasks;  // ✅ backend response structure
 }
 
-// -------- ADD TASK --------
+// ADD TASK
 export async function addTask(task: any) {
-  const res = await fetch(`${API_URL}/tasks/me`, {
+  const res = await fetch(`${API_URL}/tasks/`, {
     method: 'POST',
     headers: authHeaders(),
     body: JSON.stringify(task),
   });
 
-  if (!res.ok) {
-    throw new Error('Failed to add task');
-  }
-
-  return res.json();
+  if (!res.ok) throw new Error('Failed to add task');
+  const data = await res.json();
+  return data.data;
 }
 
-// -------- UPDATE TASK --------
+// UPDATE TASK
 export async function updateTask(id: string, task: any) {
-  const res = await fetch(`${API_URL}/tasks/${id}`, {
+  const res = await fetch(`${API_URL}/tasks/${id}/`, {
     method: 'PUT',
     headers: authHeaders(),
     body: JSON.stringify(task),
   });
 
-  if (!res.ok) {
-    throw new Error('Failed to update task');
-  }
-
-  return res.json();
+  if (!res.ok) throw new Error('Failed to update task');
+  const data = await res.json();
+  return data.data;
 }
 
-// -------- DELETE TASK --------
+// DELETE TASK
 export async function deleteTask(id: string) {
-  const res = await fetch(`${API_URL}/tasks/${id}`, {
+  const res = await fetch(`${API_URL}/tasks/${id}/`, {
     method: 'DELETE',
     headers: authHeaders(),
   });
 
-  if (!res.ok) {
-    throw new Error('Failed to delete task');
-  }
-
-  return res.json();
+  if (!res.ok) throw new Error('Failed to delete task');
+  const data = await res.json();
+  return data.data;
 }
