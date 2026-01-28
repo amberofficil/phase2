@@ -7,14 +7,19 @@ import React, {
   useEffect,
   ReactNode,
 } from 'react';
+import { signIn, signUp } from '../components/auth/auth';
 
-import { signIn, signUp, signOut, getCurrentUser } from '../lib/auth';
-
-
+/* ================= TYPES ================= */
 
 interface User {
   id: string;
   email: string;
+}
+
+/* 🔥 backend ke exact response ke mutabiq */
+interface AuthResponse {
+  token: string;
+  user: User;
 }
 
 interface AuthContextType {
@@ -26,83 +31,89 @@ interface AuthContextType {
   logout: () => void;
 }
 
+/* ================= CONTEXT ================= */
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  
-  const [user, setUser] = useState<any>(null);
+/* ================= PROVIDER ================= */
 
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // 🔹 App load par token se user nikalna
+  /* ---------- INIT ---------- */
   useEffect(() => {
-    const initAuth = async () => {
-      try {
-        const tokenData = getCurrentUser();
-if (tokenData) {
-  setUser({
-    id: "temp",
-    email: "logged-in-user",
-  });
-}
-
-      } catch (err) {
-        localStorage.removeItem('token');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    initAuth();
+    const token = localStorage.getItem('token');
+    if (token) {
+      setUser({ id: 'temp', email: 'logged-in-user' });
+      setIsAuthenticated(true);
+    }
+    setIsLoading(false);
   }, []);
 
-  // ✅ LOGIN (FIXED)
-  const login = async (email: string, password: string): Promise<boolean> => {
+  /* ---------- LOGIN ---------- */
+  const login = async (
+    email: string,
+    password: string
+  ): Promise<boolean> => {
     setIsLoading(true);
     try {
       const result = await signIn(email, password);
-      if (result) {
-        setUser(result.user); // ✅ token already auth.ts me save ho raha
+
+      if (result && result.token && result.user) {
+        localStorage.setItem('token', result.token);
+        setUser(result.user);
+        setIsAuthenticated(true);
         return true;
       }
+
       return false;
-    } catch (err) {
-      console.error('Login error:', err);
+    } catch (error) {
+      console.error('Login error:', error);
       return false;
     } finally {
       setIsLoading(false);
     }
   };
 
-  // ✅ REGISTER (FIXED)
-  const register = async (email: string, password: string): Promise<boolean> => {
+  /* ---------- REGISTER ---------- */
+  const register = async (
+    email: string,
+    password: string
+  ): Promise<boolean> => {
     setIsLoading(true);
     try {
       const result = await signUp(email, password);
-      if (result) {
+
+      if (result && result.token && result.user) {
+        localStorage.setItem('token', result.token);
         setUser(result.user);
+        setIsAuthenticated(true);
         return true;
       }
+
       return false;
-    } catch (err) {
-      console.error('Register error:', err);
+    } catch (error) {
+      console.error('Register error:', error);
       return false;
     } finally {
       setIsLoading(false);
     }
   };
 
-  // ✅ LOGOUT
+  /* ---------- LOGOUT ---------- */
   const logout = () => {
-    signOut();
+    localStorage.removeItem('token');
     setUser(null);
+    setIsAuthenticated(false);
   };
 
   return (
     <AuthContext.Provider
       value={{
         user,
-        isAuthenticated: !!user,
+        isAuthenticated,
         isLoading,
         login,
         register,
@@ -114,8 +125,12 @@ if (tokenData) {
   );
 }
 
+/* ================= HOOK ================= */
+
 export function useAuth() {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used inside AuthProvider');
+  if (!ctx) {
+    throw new Error('useAuth must be used inside AuthProvider');
+  }
   return ctx;
 }

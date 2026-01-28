@@ -1,5 +1,4 @@
-// api.ts
-import { getAuthHeaders } from './auth';
+import { getAuthHeaders } from "../components/auth/auth";
 
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api';
@@ -13,21 +12,15 @@ interface ApiResponse<T> {
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
   const url = `${API_BASE_URL}${endpoint}`;
 
-  const defaultOptions: RequestInit = {
-    headers: {
-      'Content-Type': 'application/json',
-      ...getAuthHeaders(),
-      ...options.headers,
-    },
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    ...getAuthHeaders(), // <-- fixed here
+    ...options.headers,
   };
 
   const mergedOptions: RequestInit = {
-    ...defaultOptions,
     ...options,
-    headers: {
-      ...defaultOptions.headers,
-      ...options.headers,
-    },
+    headers,
   };
 
   try {
@@ -67,18 +60,48 @@ export const authApi = {
 // Task API
 export const taskApi = {
   getAll() {
-    return request<{ tasks: Array<{ id: string; title: string; description?: string; status: 'pending' | 'completed'; createdAt: string; updatedAt: string }> }>('/tasks');
+    return request<{
+      tasks: Array<{
+        id: string;
+        title: string;
+        description?: string;
+        status: 'pending' | 'completed';
+        createdAt: string;
+        updatedAt: string;
+      }>;
+    }>('/tasks');
   },
 
   create(title: string, description?: string) {
-    return request<{ task: { id: string; title: string; description?: string; status: 'pending'; createdAt: string; updatedAt: string } }>('/tasks', {
+    return request<{
+      task: {
+        id: string;
+        title: string;
+        description?: string;
+        status: 'pending';
+        createdAt: string;
+        updatedAt: string;
+      };
+    }>('/tasks', {
       method: 'POST',
       body: JSON.stringify({ title, description, status: 'pending' }),
     });
   },
 
-  update(id: string, updates: { title?: string; description?: string; status?: 'pending' | 'completed' }) {
-    return request<{ task: { id: string; title: string; description?: string; status: 'pending' | 'completed'; createdAt: string; updatedAt: string } }>(`/tasks/${id}`, {
+  update(
+    id: string,
+    updates: { title?: string; description?: string; status?: 'pending' | 'completed' }
+  ) {
+    return request<{
+      task: {
+        id: string;
+        title: string;
+        description?: string;
+        status: 'pending' | 'completed';
+        createdAt: string;
+        updatedAt: string;
+      };
+    }>(`/tasks/${id}`, {
       method: 'PUT',
       body: JSON.stringify(updates),
     });
