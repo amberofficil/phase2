@@ -1,99 +1,106 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from 'react';
+import { signIn, signUp } from '../components/auth/auth';
 
-// Correct paths to your UI components
-import { Button } from '../components/ui/Button';
-import { Input } from '../components/ui/Input';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle
-} from '../components/ui/Card';
+interface User {
+  id: string;
+  email: string;
+}
 
-// Import your AuthProvider hook
-import { useAuth } from '../providers/AuthProvider';
+interface AuthResponse {
+  token: string;
+  user: User;
+}
 
-export default function LoginPage() {
-  const router = useRouter();
-  const { login } = useAuth();
-  const [formData, setFormData] = useState({ email: '', password: '' });
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+interface AuthContextType {
+  user: User | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  login: (email: string, password: string) => Promise<boolean>;
+  register: (email: string, password: string) => Promise<boolean>;
+  logout: () => void;
+}
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      setUser({ id: 'temp', email: 'logged-in-user' });
+      setIsAuthenticated(true);
+    }
+    setIsLoading(false);
+  }, []);
+
+  const login = async (email: string, password: string): Promise<boolean> => {
+    setIsLoading(true);
     try {
-      const success = await login(formData.email, formData.password);
-      if (success) {
-        router.push('/dashboard');
-      } else {
-        setError('Invalid email or password. Please try again.');
+      const result = await signIn(email, password);
+      if (result && result.token && result.user) {
+        localStorage.setItem('token', result.token);
+        setUser(result.user);
+        setIsAuthenticated(true);
+        return true;
       }
-    } catch (err) {
-      setError('An unexpected error occurred. Please try again.');
-      console.error(err);
+      return false;
+    } catch (error) {
+      console.error('Login error:', error);
+      return false;
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
+  const register = async (email: string, password: string): Promise<boolean> => {
+    setIsLoading(true);
+    try {
+      const result = await signUp(email, password);
+      if (result && result.token && result.user) {
+        localStorage.setItem('token', result.token);
+        setUser(result.user);
+        setIsAuthenticated(true);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Register error:', error);
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const logout = () => {
+    localStorage.removeItem('token');
+    setUser(null);
+    setIsAuthenticated(false);
+  };
+
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl">Sign in to your account</CardTitle>
-        <CardDescription>
-          Enter your email and password below to access your account
-        </CardDescription>
-      </CardHeader>
-
-      <CardContent>
-        <form onSubmit={handleSubmit}>
-          <div className="space-y-4">
-            <Input
-              label="Email"
-              name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-            />
-            <Input
-              label="Password"
-              name="password"
-              type="password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-            />
-            {error && <p className="text-sm text-red-600 mt-2">{error}</p>}
-          </div>
-          <Button type="submit" className="w-full mt-6" loading={loading}>
-            Sign In
-          </Button>
-        </form>
-      </CardContent>
-
-      <CardFooter className="flex flex-col">
-        <div className="text-sm text-center">
-          Don't have an account?{' '}
-          <Link href="/signup" className="font-medium text-blue-600 hover:underline">
-            Sign up
-          </Link>
-        </div>
-      </CardFooter>
-    </Card>
+    <AuthContext.Provider
+      value={{ user, isAuthenticated, isLoading, login, register, logout }}
+    >
+      {children}
+    </AuthContext.Provider>
   );
+}
+
+export function useAuth() {
+  const ctx = useContext(AuthContext);
+  if (!ctx) {
+    throw new Error('useAuth must be used inside AuthProvider');
+  }
+  return ctx;
 }
