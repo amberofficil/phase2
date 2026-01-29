@@ -1,5 +1,4 @@
 'use client';
-
 import { useState } from 'react';
 import { addTask } from '../../apis/todos';
 
@@ -18,23 +17,16 @@ export function CreateTaskForm({ onTaskCreated }: Props) {
     try {
       setIsLoading(true);
 
-      // ✅ Call addTask from API
-      const result = await addTask({
+      const newTask = await addTask({
         title: title.trim(),
-        description: '', // optional description
+        description: '',
       });
 
-      // ✅ Safely extract task from backend response
-      const newTask = result.task ?? result;
-
-      // ✅ Notify parent component (Dashboard) about new task
       onTaskCreated(newTask);
-
-      // ✅ Clear input
       setTitle('');
     } catch (error) {
       console.error('Error creating task:', error);
-      alert('Failed to create task'); // Friendly error alert
+      alert('Failed to create task');
     } finally {
       setIsLoading(false);
     }
@@ -47,7 +39,7 @@ export function CreateTaskForm({ onTaskCreated }: Props) {
         placeholder="Task title"
         className="border p-2 rounded flex-1 min-w-[200px]"
         value={title}
-        onChange={(e) => setTitle(e.target.value)}
+        onChange={e => setTitle(e.target.value)}
         disabled={isLoading}
       />
       <button

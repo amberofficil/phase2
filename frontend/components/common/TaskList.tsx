@@ -21,20 +21,17 @@ export function TaskList({ tasks, onTaskUpdated, onTaskDeleted }: TaskListProps)
   const [updatingTaskIds, setUpdatingTaskIds] = useState<Set<string>>(new Set());
 
   const handleStatusToggle = async (task: Task) => {
-    if (updatingTaskIds.has(task.id)) return; // Prevent concurrent updates
+    if (updatingTaskIds.has(task.id)) return;
 
     try {
       setUpdatingTaskIds(prev => new Set(prev).add(task.id));
-
-      const updatedStatus = task.status === 'pending' ? 'completed' : 'pending';
       const updatedTask = await updateTask(task.id, {
         ...task,
-        status: updatedStatus
+        status: task.status === 'pending' ? 'completed' : 'pending',
       });
-
       onTaskUpdated?.(updatedTask);
     } catch (error) {
-      console.error('Error updating task status:', error);
+      console.error(error);
       alert('Failed to update task status');
     } finally {
       setUpdatingTaskIds(prev => {
@@ -46,21 +43,17 @@ export function TaskList({ tasks, onTaskUpdated, onTaskDeleted }: TaskListProps)
   };
 
   const handleEdit = async (task: Task) => {
-    if (updatingTaskIds.has(task.id)) return; // Prevent concurrent updates
+    if (updatingTaskIds.has(task.id)) return;
 
     const newTitle = prompt('Edit task title', task.title);
     if (!newTitle || newTitle.trim() === task.title) return;
 
     try {
       setUpdatingTaskIds(prev => new Set(prev).add(task.id));
-
-      const updatedTask = await updateTask(task.id, {
-        title: newTitle.trim()
-      });
-
+      const updatedTask = await updateTask(task.id, { title: newTitle.trim() });
       onTaskUpdated?.(updatedTask);
     } catch (error) {
-      console.error('Error updating task:', error);
+      console.error(error);
       alert('Failed to update task');
     } finally {
       setUpdatingTaskIds(prev => {
@@ -72,17 +65,15 @@ export function TaskList({ tasks, onTaskUpdated, onTaskDeleted }: TaskListProps)
   };
 
   const handleDelete = async (taskId: string) => {
-    if (updatingTaskIds.has(taskId)) return; // Prevent concurrent updates
-
+    if (updatingTaskIds.has(taskId)) return;
     if (!window.confirm('Are you sure you want to delete this task?')) return;
 
     try {
       setUpdatingTaskIds(prev => new Set(prev).add(taskId));
-
       await deleteTask(taskId);
       onTaskDeleted?.(taskId);
     } catch (error) {
-      console.error('Error deleting task:', error);
+      console.error(error);
       alert('Failed to delete task');
     } finally {
       setUpdatingTaskIds(prev => {
@@ -100,7 +91,6 @@ export function TaskList({ tasks, onTaskUpdated, onTaskDeleted }: TaskListProps)
           <span className={`${task.status === 'completed' ? 'line-through text-gray-500' : ''}`}>
             {task.title}
           </span>
-
           <div className="flex space-x-2">
             <button
               className={`px-2 py-1 rounded ${
@@ -113,9 +103,7 @@ export function TaskList({ tasks, onTaskUpdated, onTaskDeleted }: TaskListProps)
               onClick={() => handleStatusToggle(task)}
               disabled={updatingTaskIds.has(task.id)}
             >
-              {updatingTaskIds.has(task.id)
-                ? '...'
-                : task.status === 'pending' ? 'Complete' : 'Undo'}
+              {updatingTaskIds.has(task.id) ? '...' : task.status === 'pending' ? 'Complete' : 'Undo'}
             </button>
 
             <button
