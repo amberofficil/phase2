@@ -7,7 +7,8 @@ import React, {
   useEffect,
   ReactNode,
 } from 'react';
-import { signIn, signUp, signOut } from '../components/auth/auth';
+import { useRouter } from 'next/navigation';
+import { authApi } from '../lib/api';
 
 interface User {
   id: string;
@@ -29,24 +30,59 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
-  // ✅ CHECK LOGIN ON PAGE REFRESH
+  // ---------------------------- VERIFY TOKEN ON PAGE LOAD ----------------------------
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      setIsAuthenticated(true);
-    }
-    setIsLoading(false);
+    const verifyToken = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/me`,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          localStorage.removeItem('token');
+          setIsAuthenticated(false);
+          setUser(null);
+        } else {
+          const data = await response.json();
+          setUser({ id: data.data.id, email: data.data.email });
+          setIsAuthenticated(true);
+        }
+      } catch (err) {
+        console.error('Token verification failed:', err);
+        localStorage.removeItem('token');
+        setIsAuthenticated(false);
+        setUser(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    verifyToken();
   }, []);
 
   // ================= LOGIN =================
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     try {
-      const result = await signIn(email, password);
+      const result = await authApi.login(email, password);
 
-      if (result?.token && result?.user) {
-        setUser(result.user);
+      if (result.success && result.data?.token && result.data.user) {
+        localStorage.setItem('token', result.data.token);
+        setUser(result.data.user);
         setIsAuthenticated(true);
         return true;
       }
@@ -67,10 +103,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   ): Promise<boolean> => {
     setIsLoading(true);
     try {
-      const result = await signUp(email, password);
+      const result = await authApi.register(email, password);
 
-      if (result?.token && result?.user) {
-        setUser(result.user);
+      if (result.success && result.data?.token && result.data.user) {
+        localStorage.setItem('token', result.data.token);
+        setUser(result.data.user);
         setIsAuthenticated(true);
         return true;
       }
@@ -86,9 +123,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // ================= LOGOUT =================
   const logout = () => {
-    signOut();
+    localStorage.removeItem('token');
     setUser(null);
     setIsAuthenticated(false);
+    router.push('/login');
   };
 
   return (
