@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -7,6 +6,7 @@ import { CreateTaskForm } from '../../components/common/CreateTaskForm';
 import { FilterControls } from '../../components/common/FilterControls';
 import { LoadingSpinner } from '../../components/ui/LoadingSpinner';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '../../providers/AuthProvider';
 
 interface Task {
   id: string;
@@ -19,33 +19,36 @@ interface Task {
 
 // ✅ SAFE API BASE URL
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL
-    ? process.env.NEXT_PUBLIC_API_BASE_URL 
-    : 'https://amberofficial-todo.hf.space';
-
+  process.env.NEXT_PUBLIC_API_BASE_URL ??
+  'https://amberofficial-todo.hf.space';
 
 export default function DashboardPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [filter, setFilter] = useState<'all' | 'pending' | 'completed'>('all');
   const [sortBy, setSortBy] = useState<'date' | 'priority' | 'title'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingTasks, setIsLoadingTasks] = useState(true);
 
+  const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
 
-  // ----------------------------
-  // Fetch tasks (Protected Page)
-  // ----------------------------
+  // ---------------------------- PROTECT PAGE ----------------------------
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push('/login');
+    }
+  }, [isAuthenticated, isLoading, router]);
+
+  // ---------------------------- FETCH TASKS ----------------------------
   useEffect(() => {
     const fetchTasks = async () => {
+      if (!isAuthenticated) return; // don't fetch if not logged in
+
       try {
-        setIsLoading(true);
+        setIsLoadingTasks(true);
 
         const token = localStorage.getItem('token');
-        if (!token) {
-          router.push('/login');
-          return;
-        }
+        if (!token) return;
 
         const res = await fetch(`${API_BASE_URL}/tasks/`, {
           headers: {
@@ -69,16 +72,14 @@ export default function DashboardPage() {
         console.error('Error fetching tasks:', error);
         setTasks([]);
       } finally {
-        setIsLoading(false);
+        setIsLoadingTasks(false);
       }
     };
 
     fetchTasks();
-  }, [router]);
+  }, [isAuthenticated, router]);
 
-  // ----------------------------
-  // Filter + Sort
-  // ----------------------------
+  // ---------------------------- FILTER + SORT ----------------------------
   const filteredAndSortedTasks = useMemo(() => {
     let result = [...tasks];
 
@@ -104,22 +105,15 @@ export default function DashboardPage() {
     return result;
   }, [tasks, filter, sortBy, sortOrder]);
 
-  // ----------------------------
-  // Task handlers
-  // ----------------------------
-  const handleTaskCreated = (task: Task) =>
-    setTasks(prev => [task, ...prev]);
-
+  // ---------------------------- TASK HANDLERS ----------------------------
+  const handleTaskCreated = (task: Task) => setTasks(prev => [task, ...prev]);
   const handleTaskUpdated = (task: Task) =>
     setTasks(prev => prev.map(t => (t.id === task.id ? task : t)));
-
   const handleTaskDeleted = (id: string) =>
     setTasks(prev => prev.filter(t => t.id !== id));
 
-  // ----------------------------
-  // Loading
-  // ----------------------------
-  if (isLoading) {
+  // ---------------------------- LOADING ----------------------------
+  if (isLoading || isLoadingTasks) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <LoadingSpinner />
@@ -131,9 +125,7 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
-          <h1 className="text-4xl font-bold text-blue-500">
-            My Tasks
-          </h1>
+          <h1 className="text-4xl font-bold text-blue-500">My Tasks</h1>
           <CreateTaskForm onTaskCreated={handleTaskCreated} />
         </div>
 
@@ -152,9 +144,7 @@ export default function DashboardPage() {
             <h3 className="text-xl font-medium text-gray-900 mb-2">
               No tasks yet
             </h3>
-            <p className="text-gray-600">
-              Get started by creating a new task.
-            </p>
+            <p className="text-gray-600">Get started by creating a new task.</p>
           </div>
         ) : (
           <div className="bg-white rounded-md shadow-sm p-6 mt-6">
@@ -169,4 +159,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-

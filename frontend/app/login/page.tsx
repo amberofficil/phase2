@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -19,7 +19,7 @@ import { useAuth } from '../../providers/AuthProvider';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, isAuthenticated, isLoading } = useAuth();
 
   const [formData, setFormData] = useState({
     email: '',
@@ -28,10 +28,19 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // ------------------- AUTO REDIRECT IF ALREADY LOGGED IN -------------------
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      router.push('/my-tasks');
+    }
+  }, [isAuthenticated, isLoading, router]);
+
+  // ------------------- HANDLE FORM CHANGE -------------------
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // ------------------- HANDLE FORM SUBMIT -------------------
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -40,7 +49,6 @@ export default function LoginPage() {
     const success = await login(formData.email, formData.password);
 
     if (success) {
-      // ✅ CORRECT REDIRECT
       router.push('/my-tasks');
     } else {
       setError('Invalid email or password');
@@ -48,6 +56,9 @@ export default function LoginPage() {
 
     setLoading(false);
   };
+
+  // ------------------- RENDER -------------------
+  if (isLoading) return <p>Loading...</p>;
 
   return (
     <Card className="w-full max-w-md">
