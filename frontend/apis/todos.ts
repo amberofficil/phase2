@@ -1,11 +1,8 @@
 'use client';
 
-// ✅ Set your correct backend base URL
 const API_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ??
-  'https://amberofficial-todo.hf.space'; // <-- Replace with your deployed backend URL
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? 'https://amberofficial-todo.hf.space/api'; // ✅ add /api
 
-// ------------------- Auth headers -------------------
 function authHeaders() {
   const token =
     typeof window !== 'undefined'
@@ -18,7 +15,7 @@ function authHeaders() {
   };
 }
 
-// ------------------- GET TASKS -------------------
+// GET MY TASKS
 export async function getTasks() {
   const res = await fetch(`${API_URL}/tasks/`, {
     method: 'GET',
@@ -26,9 +23,6 @@ export async function getTasks() {
   });
 
   if (!res.ok) {
-    if (res.status === 401) {
-      throw new Error('Unauthorized: Please login again');
-    }
     throw new Error('Failed to fetch tasks');
   }
 
@@ -36,61 +30,44 @@ export async function getTasks() {
   return data.data.tasks;
 }
 
-// ------------------- ADD TASK -------------------
-export async function addTask(title: string, description?: string) {
+// ADD TASK
+export async function addTask(task: any) {
   const res = await fetch(`${API_URL}/tasks/`, {
     method: 'POST',
     headers: authHeaders(),
     body: JSON.stringify({
-      title,
-      description,
-      status: 'pending', // default status
+      title: task.title,
+      description: task.description,
+      status: 'pending', // ✅ make sure backend accepts status
     }),
   });
 
-  if (!res.ok) {
-    throw new Error('Failed to add task');
-  }
-
+  if (!res.ok) throw new Error('Failed to add task');
   const data = await res.json();
   return data.data;
 }
 
-// ------------------- UPDATE TASK -------------------
-export async function updateTask(
-  id: string,
-  updates: { title?: string; description?: string; status?: 'pending' | 'completed' }
-) {
+// UPDATE TASK
+export async function updateTask(id: string, task: any) {
   const res = await fetch(`${API_URL}/tasks/${id}/`, {
     method: 'PUT',
     headers: authHeaders(),
-    body: JSON.stringify(updates),
+    body: JSON.stringify(task),
   });
 
-  if (!res.ok) {
-    throw new Error('Failed to update task');
-  }
-
+  if (!res.ok) throw new Error('Failed to update task');
   const data = await res.json();
   return data.data;
 }
 
-// ------------------- DELETE TASK -------------------
+// DELETE TASK
 export async function deleteTask(id: string) {
   const res = await fetch(`${API_URL}/tasks/${id}/`, {
     method: 'DELETE',
     headers: authHeaders(),
   });
 
-  if (!res.ok) {
-    throw new Error('Failed to delete task');
-  }
-
+  if (!res.ok) throw new Error('Failed to delete task');
   const data = await res.json();
   return data.data;
-}
-
-// ------------------- MARK TASK AS COMPLETED -------------------
-export async function completeTask(id: string) {
-  return updateTask(id, { status: 'completed' });
 }
