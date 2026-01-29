@@ -1,6 +1,5 @@
 'use client';
 import { useState } from 'react';
-import { addTask } from '../../apis/todos'; // ✅ fixed import
 
 interface Props {
   onTaskCreated: (task: any) => void;
@@ -8,48 +7,35 @@ interface Props {
 
 export function CreateTaskForm({ onTaskCreated }: Props) {
   const [title, setTitle] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!title.trim() || isLoading) return;
-
-    try {
-      setIsLoading(true);
-      const newTask = await addTask({
-        title: title.trim(),
-        description: '', // optional
-      });
-
-      onTaskCreated(newTask.task || newTask); // ✅ backend response may wrap task
-      setTitle('');
-    } catch (error) {
-      console.error('Error creating task:', error);
-      alert('Failed to create task');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   return (
-    <form onSubmit={handleSubmit} className="flex space-x-2 w-full md:w-auto">
+    <div className="flex space-x-2">
       <input
         type="text"
         placeholder="Task title"
-        className="border p-2 rounded flex-1 min-w-[200px]"
+        className="border p-2 rounded flex-1"
         value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        disabled={isLoading}
+        onChange={e => setTitle(e.target.value)}
       />
       <button
-        type="submit"
-        className={`px-4 py-2 bg-blue-600 text-white rounded ${
-          isLoading ? 'opacity-70 cursor-not-allowed' : ''
-        }`}
-        disabled={isLoading || !title.trim()}
+        className="px-4 py-2 bg-blue-600 text-white rounded"
+        onClick={() => {
+          if (!title.trim()) return;
+          onTaskCreated({
+            id: Date.now().toString(),
+            title,
+            status: 'pending',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          });
+          setTitle('');
+        }}
       >
-        {isLoading ? 'Adding...' : 'Add Task'}
+        Add Task
       </button>
-    </form>
+    </div>
   );
 }
+
+
+
