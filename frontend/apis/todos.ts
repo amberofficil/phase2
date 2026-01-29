@@ -1,7 +1,7 @@
 'use client';
 
 const API_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? 'https://amberofficial-todo.hf.space/api'; // ✅ /api added
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? 'https://amberofficial-todo.hf.space'
 
 function authHeaders() {
   const token =
