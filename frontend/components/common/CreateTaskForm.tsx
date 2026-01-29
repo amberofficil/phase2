@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { addTask } from '../../apis/todos';
+import { addTask } from '../../apis/todos'; // ✅ fixed import
 
 interface Props {
   onTaskCreated: (task: any) => void;
@@ -16,13 +16,12 @@ export function CreateTaskForm({ onTaskCreated }: Props) {
 
     try {
       setIsLoading(true);
-
       const newTask = await addTask({
         title: title.trim(),
-        description: '',
+        description: '', // optional
       });
 
-      onTaskCreated(newTask);
+      onTaskCreated(newTask.task || newTask); // ✅ backend response may wrap task
       setTitle('');
     } catch (error) {
       console.error('Error creating task:', error);
@@ -39,7 +38,7 @@ export function CreateTaskForm({ onTaskCreated }: Props) {
         placeholder="Task title"
         className="border p-2 rounded flex-1 min-w-[200px]"
         value={title}
-        onChange={e => setTitle(e.target.value)}
+        onChange={(e) => setTitle(e.target.value)}
         disabled={isLoading}
       />
       <button
