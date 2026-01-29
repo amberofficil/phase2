@@ -1,54 +1,52 @@
-
 // auth.ts
 const API_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL
-    ? process.env.NEXT_PUBLIC_API_BASE_URL
-    : "https://amberofficial-todo.hf.space";
-// Sign In
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  'https://amberofficial-todo.hf.space';
+
+// ================= SIGN IN =================
 export async function signIn(email: string, password: string) {
   const res = await fetch(`${API_URL}/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),
   });
 
   if (!res.ok) return null;
 
-  const data: { token: string; user: { id: string; email: string } } = await res.json();
-  localStorage.setItem("access_token", data.token);
+  const data: { token: string; user: { id: string; email: string } } =
+    await res.json();
+
+  // ✅ ONE STANDARD TOKEN NAME
+  localStorage.setItem('token', data.token);
+
   return data;
 }
 
-// Sign Up
+// ================= SIGN UP =================
 export async function signUp(email: string, password: string) {
   const res = await fetch(`${API_URL}/auth/register`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),
   });
 
   if (!res.ok) return null;
 
-  const resData = await res.json();
+  const data = await res.json();
 
-localStorage.setItem("token", resData.data.access_token);
+  // ✅ SAME TOKEN NAME
+  localStorage.setItem('token', data.token);
 
-return resData;
-
-
+  return data;
 }
 
-// Get Auth Headers for API requests
+// ================= AUTH HEADERS =================
 export function getAuthHeaders(): Record<string, string> {
-  const token = localStorage.getItem("access_token");
-  if (token) {
-    return { Authorization: `Bearer ${token}` };
-  }
-  return {};
+  const token = localStorage.getItem('token');
+  return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
-// Logout
+// ================= LOGOUT =================
 export function signOut() {
-  localStorage.removeItem("access_token");
+  localStorage.removeItem('token');
 }
-

@@ -7,16 +7,11 @@ import React, {
   useEffect,
   ReactNode,
 } from 'react';
-import { signIn, signUp } from '../components/auth/auth';
+import { signIn, signUp, signOut } from '../components/auth/auth';
 
 interface User {
   id: string;
   email: string;
-}
-
-interface AuthResponse {
-  token: string;
-  user: User;
 }
 
 interface AuthContextType {
@@ -35,55 +30,63 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
+  // ✅ CHECK LOGIN ON PAGE REFRESH
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      setUser({ id: 'temp', email: 'logged-in-user' });
       setIsAuthenticated(true);
     }
     setIsLoading(false);
   }, []);
 
+  // ================= LOGIN =================
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     try {
       const result = await signIn(email, password);
-      if (result && result.token && result.user) {
-        localStorage.setItem('token', result.token);
+
+      if (result?.token && result?.user) {
         setUser(result.user);
         setIsAuthenticated(true);
         return true;
       }
+
       return false;
-    } catch (error) {
-      console.error('Login error:', error);
+    } catch (err) {
+      console.error('Login error:', err);
       return false;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const register = async (email: string, password: string): Promise<boolean> => {
+  // ================= REGISTER =================
+  const register = async (
+    email: string,
+    password: string
+  ): Promise<boolean> => {
     setIsLoading(true);
     try {
       const result = await signUp(email, password);
-      if (result && result.token && result.user) {
-        localStorage.setItem('token', result.token);
+
+      if (result?.token && result?.user) {
         setUser(result.user);
         setIsAuthenticated(true);
         return true;
       }
+
       return false;
-    } catch (error) {
-      console.error('Register error:', error);
+    } catch (err) {
+      console.error('Register error:', err);
       return false;
     } finally {
       setIsLoading(false);
     }
   };
 
+  // ================= LOGOUT =================
   const logout = () => {
-    localStorage.removeItem('token');
+    signOut();
     setUser(null);
     setIsAuthenticated(false);
   };
