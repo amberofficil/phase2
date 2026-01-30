@@ -4,16 +4,14 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '../../providers/AuthProvider';
+import { Button } from '../../components/ui/Button';
+import { Input } from '../../components/ui/Input';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../../components/ui/Card';
 
 export default function SignupPage() {
   const router = useRouter();
   const { register } = useAuth();
-
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    confirmPassword: '',
-  });
+  const [formData, setFormData] = useState({ email: '', password: '', confirmPassword: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -23,6 +21,7 @@ export default function SignupPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       return;
@@ -34,68 +33,43 @@ export default function SignupPage() {
     try {
       const success = await register(formData.email, formData.password);
       if (success) {
-        router.push('/dashboard'); // ✅ redirect after signup
+        router.push('/dashboard'); // signup success → dashboard
       } else {
-        setError('Signup failed');
+        setError('Failed to create account. Please try again.');
       }
     } catch (err) {
-      setError('Something went wrong');
       console.error(err);
+      setError('An unexpected error occurred. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white p-8 rounded-md shadow-md">
-        <h1 className="text-4xl font-bold text-blue-500 text-center">Sign Up</h1>
-
-        <form onSubmit={handleSubmit} className="space-y-4 mt-6">
-          <input
-            name="email"
-            type="email"
-            placeholder="Email"
-            required
-            value={formData.email}
-            onChange={handleChange}
-            className="w-full p-3 border rounded-md"
-          />
-          <input
-            name="password"
-            type="password"
-            placeholder="Password"
-            required
-            value={formData.password}
-            onChange={handleChange}
-            className="w-full p-3 border rounded-md"
-          />
-          <input
-            name="confirmPassword"
-            type="password"
-            placeholder="Confirm Password"
-            required
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            className="w-full p-3 border rounded-md"
-          />
-          {error && <p className="text-red-500 text-sm">{error}</p>}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-500 text-white p-3 rounded-md"
-          >
-            {loading ? 'Creating Account...' : 'Sign Up'}
-          </button>
+    <Card className=" max-w-md">
+      <CardHeader className="space-y-1">
+        <CardTitle className="text-2xl text-center">Create an account</CardTitle>
+        <CardDescription>Enter your email and password to create your account</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit}>
+          <div className="space-y-4">
+            <Input label="Email" name="email" type="email" value={formData.email} onChange={handleChange} required className="w-64" />
+            <Input label="Password" name="password" type="password" value={formData.password} onChange={handleChange} required className="w-64" />
+            <Input label="Confirm Password" name="confirmPassword" type="password" value={formData.confirmPassword} onChange={handleChange} required className="w-64" />
+            {error && <p className="text-sm text-red-600 mt-2">{error}</p>}
+          </div>
+          <Button type="submit" className="w-full mt-6" loading={loading}>Sign Up</Button>
         </form>
-
-        <p className="text-center text-sm mt-4">
+      </CardContent>
+      <CardFooter className="flex flex-col">
+        <div className="text-sm text-center">
           Already have an account?{' '}
-          <Link href="/login" className="text-blue-500 font-medium">
-            Sign In
+          <Link href="/login" className="font-medium text-blue-600 hover:underline">
+            Sign in
           </Link>
-        </p>
-      </div>
-    </div>
+        </div>
+      </CardFooter>
+    </Card>
   );
 }

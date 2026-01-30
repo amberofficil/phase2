@@ -1,106 +1,66 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-
+import { useAuth } from '../../providers/AuthProvider';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '../../components/ui/Card';
-
-import { useAuth } from '../../providers/AuthProvider';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../../components/ui/Card';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, isAuthenticated, isLoading } = useAuth();
-
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
-  const [error, setError] = useState('');
+  const { login } = useAuth();
+  const [formData, setFormData] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
 
-  // ------------------- AUTO REDIRECT IF ALREADY LOGGED IN -------------------
-  useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      router.push('/my-tasks');
-    }
-  }, [isAuthenticated, isLoading, router]);
-
-  // ------------------- HANDLE FORM CHANGE -------------------
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // ------------------- HANDLE FORM SUBMIT -------------------
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
     setLoading(true);
 
-    const success = await login(formData.email, formData.password);
+    try {
+      const success = await login(formData.email, formData.password);
 
-    if (success) {
-      router.push('/my-tasks');
-    } else {
-      setError('Invalid email or password');
+      if (success) {
+        router.push('/dashboard'); // login success → dashboard
+      } else {
+        router.push('/signup'); // login fail → signup
+      }
+
+    } catch (err) {
+      console.error(err);
+      router.push('/signup'); // fallback
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
-  // ------------------- RENDER -------------------
-  if (isLoading) return <p>Loading...</p>;
-
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader>
-        <CardTitle className="text-2xl">Sign in</CardTitle>
-        <CardDescription>Access your tasks</CardDescription>
+    <Card className="max-w-sm">
+      <CardHeader className="space-y-1">
+        <CardTitle className="text-2xl text-center">Sign in to your account</CardTitle>
+        <CardDescription>Enter your email and password below to access your account</CardDescription>
       </CardHeader>
-
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <Input
-            label="Email"
-            name="email"
-            type="email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-          />
-          <Input
-            label="Password"
-            name="password"
-            type="password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-          />
-
-          {error && <p className="text-sm text-red-600">{error}</p>}
-
-          <Button type="submit" className="w-full" loading={loading}>
-            Sign In
-          </Button>
+        <form onSubmit={handleSubmit}>
+          <div className="space-y-4">
+            <Input label="Email" name="email" type="email" value={formData.email} onChange={handleChange} required className="w-64" />
+            <Input label="Password" name="password" type="password" value={formData.password} onChange={handleChange} required className="w-64" />
+          </div>
+          <Button type="submit" className="w-full mt-6" loading={loading}>Sign In</Button>
         </form>
       </CardContent>
-
-      <CardFooter>
-        <p className="text-sm">
-          Don’t have an account?{' '}
-          <Link href="/signup" className="text-blue-600 underline">
+      <CardFooter className="flex flex-col">
+        <div className="text-sm text-center">
+          Don't have an account?{' '}
+          <Link href="/signup" className="font-medium text-blue-600 hover:underline">
             Sign up
           </Link>
-        </p>
+        </div>
       </CardFooter>
     </Card>
   );
